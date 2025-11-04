@@ -15,7 +15,7 @@ Start:
                         nextreg 7, 2                    ; Set 14MHz (avoids extra wait states present at 28MHz)
                         NRREAD 105                      ; Read layer 2 state
                         ld (L2Enable), a                ;   and preserve it.
-                        and %0111'1111                  ; Disable layer 2
+                        and %0'111'1111                 ; Disable layer 2
                         nextreg 105, a                  ;   and apply it.
                         SETUPL2 18, %000'000'11         ; Fill 10x 8K layer 2 banks
                         SETUPL2 19, %000'111'00         ; with alternate blue/green stripes
@@ -37,7 +37,7 @@ Start:
                         nextreg 24, 0
                         nextreg 24, 255 
 L2Enable+*:             ld a, SMC
-                        or %1000'0000
+                        or %1'000'0000
                         nextreg 112, %00'01'0000        ; Set layer 2 to 320x2q56 mode
                         nextreg 105, a                  ; Enable layer 2
                         nextreg 34, %00000'11'0         ; Disable ULA interrupt and enable line interrupt
@@ -56,7 +56,7 @@ L2Enable+*:             ld a, SMC
                         im 2
                         ei                              ; Finally enable mode 2 line interrupts                     
 MainLoop:                   
-                        adc hl, bc                      ; The main loop only contains timing padding in a tight loop
+                        //adc hl, bc                    ; The main loop only contains timing padding in a tight loop
                         jp MainLoop                     ; All the work is done in the line interrupt
 FillBank:                  
                         nextreg $50, a                  ; Fill an 8K bank whose bank number is in b

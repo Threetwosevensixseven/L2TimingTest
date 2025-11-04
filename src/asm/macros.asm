@@ -1,18 +1,18 @@
 ; macros.asm
 
-BORDER                  MACRO Colour?
+BORDER                 MACRO Colour?                    ; This vesion is constant timing
+                          ld a, Colour?
+                          out (ULA_PORT), a
+                        ENDM
+
+BORDER2                  MACRO Colour?                   ; This vesion is variable timing
                             IF Colour? == 0
                                 xor a
                             ELSE
                                 ld a, Colour?
                             ENDIF
                             out (ULA_PORT), a
-                        ENDM
-
-BORDER2                 MACRO Colour?
-                          ld a, Colour?
-                          out (ULA_PORT), a
-                        ENDM                        
+                        ENDM                     
 
 FREEZE                  MACRO Colour1?, Colour2?
 .Loop                       BORDER Colour1?
