@@ -21,16 +21,8 @@ FREEZE                  MACRO Colour1?, Colour2?
                         ENDM
 
 CSBREAK                 MACRO                           ; Intended for CSpect debugging.
-                            db $DD, $01                 ; Enabled when the -brk switch is supplied.
+                            db $FD, $00                 ; Enabled when the -brk switch is supplied.
                         ENDM                            ; Remove before running on real hardware!
-
-CSBREAKSAFE             MACRO                           ; Intended for CSpect debugging.
-                            push bc                     ; Enabled when the -brk switch is supplied.
-                            db $DD, $01                 ; Mitigates worst effects of running on real hardware.
-                            nop                         ; On real Z80 or Z80N, DD 01 does NOP:LD BC, NNNN,
-                            nop                         ; so we set safe values for NNNN,
-                            pop bc                      ; then we restore the value of BC we saved earlier. 
-                        ENDM
 
 MFBREAK                 MACRO                           ; Intended for NextZXOS NMI debugging.
                             nextreg 2, 8                ; This only works in Next core 3.01.10 and above.
@@ -43,3 +35,17 @@ NRREAD                  MACRO Register?                 ; Nextregs have to be re
                         inc b
                         in a, (c)
                         ENDM
+
+FILLLDIR                MACRO Addr?, Size?, Value?
+                            ld hl, Addr?
+                            ld (hl), Value?
+                            ld de, Addr?+1
+                            ld bc, Size?-1
+                            ldir
+                        ENDM 
+
+SETUPL2                 MACRO Bank?, Colour?
+                            ld a, Bank?
+                            ld b, Colour?
+                            call FillBank
+                        ENDM                 

@@ -1,0 +1,14 @@
+; screen.asm
+                        ORG $0000
+Screen:
+                        BORDER 0
+                        REPT 5838                       ; At VGA50 14MHz, this covers 320x256 layer 2. 5838 x 2 = 11676
+                            nextreg 18, 15
+                            nextreg 18, 14
+                        ENDR
+                        nextreg 18, 9                   ; This occurs after the end of 320x256 layer 2
+                        BORDER 0
+                        ei
+                        reti
+
+                        DISPLAY "Last Screen=", $

@@ -1,134 +1,83 @@
 ; main.asm
+                        OPT RESET --syntax=abfw \
+                            --zxnext=cspect             ; Tighten up syntax and warnings
                         DEVICE ZXSPECTRUMNEXT           ; Use ZX Spectrum Next memory model
-                        MMU 0 3, 0                      ; slot 0=8K page 0, s1=p1, s2=p2, s3=p3
-                        MMU 4 7, 6                      ; slot 4=8K page 6, s5=p7, s6=p8, s7=p9
+                        MMU 0 3, 6                      ; slot 0=8K page  6, s1=p7, s2=p8, s3=p9
+                        MMU 4 5, 12                     ; slot 4=8K page 12, s5=p13
+                        MMU 6 7, 0                      ; slot 6=8K page  0, s7=p1
 
                         INCLUDE "constants.asm"         ; Constants
                         INCLUDE "macros.asm"            ; Macros
 
-                        ORG $0000                       ; The entry point code is assembled to run at $0000
-Start:                                                  ; but NEX can only do custom paging in the upper 16K.
-                        nextreg $50, 0                  ; So the entry bank is put at $C000 and entered there.
-                        jp Relocate                     ; We put the bank back at $000 asap, and jump to the
-                                                        ; equivalent current position to continue setting up.
-
-                        ORG $0018
-Delay:                  DUP 5
-                          nop
-                        EDUP
-                        ret                         
-                           
-                        ORG $0038
-                        ei
-                        ret
-
-                        ORG $0100                       
-Relocate: 
-                        nextreg $07, %11                ; Next Turbo 28MHz
-                        BORDER 0
-                        NRREAD 6
-                        //and %01000111                   ; Disable both NMI buttons, 50/60 (F3) and turbo hotkey (F8)
-                        nextreg 6, a
-                        nextreg $51, 1
-                        nextreg $52, 2
-                        nextreg $53, 3
-                        nextreg $54, 6
-                        nextreg $55, 7
-                        nextreg $56, 8
-                        
-
-                        NRREAD 5
-                        and %100                        ; Mask out 50/60 (bit 2)
-                        jr nz, .Is60                    ; For 50Hz only, shorten the end of frame padding
-                        ld hl, SoakUp+3                 ; from four to three pad instructions
-                        ld (hl), $C9                    ; followed by RET
-.Is60:
-                        nextreg 67, %00010000           ; Select layer 2 first palette
-                        nextreg 64, 0                   ; Reset palette index  
-                        call SetPal
-                        call FillPixels                                            
-                        nextreg $57, 9
-                        nextreg 18, 9                   ; Start of Layer 2, 16K bank
-                        nextreg 112, %00010000          ; Layer 2 320x256, no offset
-                        nextreg 21, %00000100           ; LSU layer order
-                        nextreg 24, 0
+                        ORG $c000                       ; Setup code lives in upper 16K                      
+Start:
+                        di                              ; Disable interrupts while setting up
+                        nextreg 7, 2                    ; Set 14MHz (avoids extra wait states present at 28MHz)
+                        NRREAD 105                      ; Read layer 2 state
+                        ld (L2Enable), a                ;   and preserve it.
+                        and %0111'1111                  ; Disable layer 2
+                        nextreg 105, a                  ;   and apply it.
+                        SETUPL2 18, %000'000'11         ; Fill 10x 8K layer 2 banks
+                        SETUPL2 19, %000'111'00         ; with alternate blue/green stripes
+                        SETUPL2 20, %000'000'11
+                        SETUPL2 21, %000'111'00
+                        SETUPL2 22, %000'000'11
+                        SETUPL2 23, %000'111'00
+                        SETUPL2 24, %000'000'11
+                        SETUPL2 25, %000'111'00
+                        SETUPL2 26, %000'000'11
+                        SETUPL2 27, %000'111'00
+                        SETUPL2 28, %111'000'00         ; Fill 8K bank with red
+                        SETUPL2 29, %111'000'00         ; Fill 8K bank with red
+                        SETUPL2 30, %111'111'00         ; Fill 8K bank with yellow
+                        SETUPL2 31, %111'000'00         ; Fill 8K bank with yellow
+                        nextreg 18, 9                   ; Set base layer 2 bank to 16K bank 9 (green/blue)     
+                        nextreg 24, 0                   ; Set max clip window for 320x256 layer 2
                         nextreg 24, 255
                         nextreg 24, 0
-                        nextreg 24, 255
-                        nextreg 100, 33                 ; Set vertical line offset to first layer 2 line
-                        nextreg 105, 128                ; Enable layer 2
-                        im 1                            ; Use mode 1 interrupts, because we have RAM in slot 0
-                        ei                              ; and enable interrupts                    
-MainLoop:               
-                        halt  
-                        BORDER 0                     
-.WaitLine0:             NRREAD 31
-                        jr nz, .WaitLine0
-                        NRREAD 30
-                        jr nz, .WaitLine0
-                        call PreSoak
-                        BORDER2 0
+                        nextreg 24, 255 
+L2Enable+*:             ld a, SMC
+                        or %1000'0000
+                        nextreg 112, %00'01'0000        ; Set layer 2 to 320x2q56 mode
+                        nextreg 105, a                  ; Enable layer 2
+                        nextreg 34, %00000'11'0         ; Disable ULA interrupt and enable line interrupt
+                        nextreg 35, 0                   ; Set line interrupt to interrupt at line 0
+                        nextreg 100, 32                 ; Set video offset so that line 0 is the first 320x256 line
 
-                        DISPLAY "Start of Unrolled section=",$   
-                        DUP 3178, RepeatValue //2169 good, 2500 bad
-                          nextreg 18, (RepeatValue mod 36) + 9
-                          rst $18
-                        EDUP
-                        DISPLAY "End of Unrolled section=",$   
+                        nextreg $50, 6                  ; Set lower 48K to contain the line interrupt handler
+                        nextreg $51, 7                  ; with the screen-changing code.
+                        nextreg $52, 8
+                        nextreg $53, 9
+                        nextreg $54, 12
+                        nextreg $55, 13
 
-                        call SoakUp
-                        jp MainLoop
-                        //DISPLAY "Last Unrolled Address=",$                        
-
-SoakUp:                 // 3 for VGA50
-                        // 4 for VGA60
-                        DUP 4
-                          ld b, (hl)
-                        EDUP
-                        ret 
-
-PreSoak:                ld b, 33
-.Loop                   nextreg 4, 0
-                        nop
-                        djnz .Loop
-                        nop:nop:nop:nop
-                        ret                  
-
-SetPal:                 
-                        xor a
-                        ld b, a
-.PalLoop:                nextreg 65, a
-                        inc a
-                        djnz .PalLoop
-                        ret
-
-FillPixels:
-                        ld a, 18
-                        ld (.Bank), a
-.Loop1:                 ld b, 10
-.Loop2:                 exx
-                        nextreg $57, a
-                        ld hl, $E000
-                        ld (hl), a
-                        ld de, $E001
-                        ld bc, $1FFF
+                        ld a, $fd                       ; Setup mode 2 interrupts for vector table at $fd00 to $fe01
+                        ld i, a                         ; This points to $0000 where the screen-updating code lives
+                        im 2
+                        ei                              ; Finally enable mode 2 line interrupts                     
+MainLoop:                   
+                        adc hl, bc                      ; The main loop only contains timing padding in a tight loop
+                        jp MainLoop                     ; All the work is done in the line interrupt
+FillBank:                  
+                        nextreg $50, a                  ; Fill an 8K bank whose bank number is in b
+                        ld hl, $0000                    ; with the byte value in a.
+                        ld (hl), b
+                        ld de, $0001
+                        ld bc, $1fff
                         ldir
-                        exx
-.Bank equ $+1:          ld a, SMC
-                        inc a
-                        ld (.Bank), a
-                        djnz FillPixels.Loop2
-                        cp 96
-                        jr c, FillPixels.Loop1
-                        ret
-pend
-
-                        DUP 30, Fred
-                          db Fred
-                        EDUP
+                        ret                       
+Im2Vector:
+                        ORG $fd00                       ; IM2 vector table points to ISR at $0000,
+                        REPT 257                        ; whatever value is placed on the bus for the LSB.
+                            DB $00
+                        ENDR
 
                         DISPLAY "Last Address=",$
 
-                        SAVENEX OPEN "../../bin/L2TimingTest.nex", $C000, $0000, 0
-                        SAVENEX BANK 0,1
+                        INCLUDE "screen.asm"
+
+                        SAVENEX OPEN "../../bin/L2TimingTest.nex", Start, $0000
+                        SAVENEX CORE 3, 01, 05          ; Next core 3.01.05 required as minimum
+                        //SAVENEX SCREEN BMP "../../img/loading-screen3.bmp"
+                        SAVENEX BANK 0, 3, 4, 6
                         SAVENEX CLOSE
