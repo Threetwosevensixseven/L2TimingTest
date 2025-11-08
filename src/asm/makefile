@@ -1,8 +1,6 @@
-
 # Makefile for L2TimingTest.
-# Only tested with Embarcadero MAKE 5.41 for Windows. 
-# Let me know if other Windows MAKEs have issues.
-# If you fix this up for linux or mac, please contribute your changes.
+# Only tested with GNU MAKE 3.81 for Windows.
+# If you fix this up for linux or mac, please contribute your changes
 
 # Change these variables to suit your own environment
 BINDIR = ..\..\bin
@@ -14,9 +12,10 @@ SYNCDIR = C:\spec\sync\ON
 RM = del /F /Q
 MD = md
 KILL = taskkill /F /IM
+PY = python3.13.exe
 
 # Default target is to build the NEX file from source
-build: 
+build:
 	$(SJASMPLUS) main.asm
 
 # Removes all build-generated files
@@ -30,7 +29,7 @@ clean:
 emu: build
 	-$(HDFMONKEY) mkdir $(EMUSD) Mine
 	$(HDFMONKEY) put $(EMUSD) $(BINDIR)/L2TimingTest.nex Mine
-#	$(HDFMONKEY) put $(EMUSD) autoexec.bas NextZXOS
+	$(HDFMONKEY) put $(EMUSD) autoexec.bas NextZXOS
 #   Uncomment this to get the current autoexec.bas/.txt in the image back into the project:
 #	$(HDFMONKEY) get $(EMUSD) /NextZXOS/autoexec.bas $(SRCDIR)/autoexec.bas
 #	$(HDFMONKEY) get $(EMUSD) /NextZXOS/autoexec.txt $(SRCDIR)/autoexec.txt
@@ -48,5 +47,5 @@ sync: build
 
 # Warning: kills all running python processes
 # Remove these two lines and start the server manually if that bothers you
-	-$(KILL) py.exe
-	CMD /C start /d $(SYNCDIR) /min nextsync.py
+	-$(KILL) $(PY)
+	CMD /C start /min /d $(SYNCDIR) nextsync.py

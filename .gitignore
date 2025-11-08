@@ -1,1 +1,5 @@
 /bin/L2TimingTest.nex
+.suo
+bin
+obj
+.vs
