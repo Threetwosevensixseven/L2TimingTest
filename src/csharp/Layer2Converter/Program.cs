@@ -3,9 +3,6 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Layer2Converter
 {
@@ -14,15 +11,15 @@ namespace Layer2Converter
         const string INPUT_PATH = @"..\..\..\..\..\images\resized\";
         const string OUTPUT_PATH = @"..\..\..\..\..\data\";
 
-        static void Main(string[] args)
+        static void Main()
         {
             Convert320x256("bridge.png");
             Convert256x192("watch.png");
         }
 
-        static void Convert320x256(string inFile)
+        static void Convert320x256(string inFile, int? chunkSizeKiB = null)
         {
-            // Make some temporary data structure to hold the palette entries and pixel bytes.
+            // Make a temporary data structure to hold the palette entries and pixel bytes.
             var pal = new Dictionary<Color, ushort>();
             var palindex = new Dictionary<Color, byte>();
             var pixels = new List<byte>();
@@ -92,9 +89,28 @@ namespace Layer2Converter
                 }
             }
 
-            // Output Layer 2 pixel data for 10x 8K banks in one binary file.
-            string fn = outPixels + ".bin";
-            File.WriteAllBytes(fn, pixels.ToArray());
+            if (chunkSizeKiB.HasValue && chunkSizeKiB.Value > 0)
+            {
+                // NextZXOS APIs can read and write files up to Int32.Max size, but NextBASIC can only LOAD one
+                // 16K BANK at a time, so give the option to split up the 80K of pixels into five separate 16K files,
+                // or 8K, or any other arbitrary size,
+                int bankSize = chunkSizeKiB.Value * 1024;
+                int chunkCount = pixels.Count / bankSize;
+                for (int i = 0; i < chunkCount; i++)
+                {
+                    var pixelBytes = pixels.ToArray();
+                    string fn = outPixels + (i + 1) + ".bin";
+                    var pixelBank = new byte[bankSize];
+                    Array.Copy(pixelBytes, bankSize * i, pixelBank, 0, bankSize);
+                    File.WriteAllBytes(fn, pixelBank);
+                }
+            }
+            else
+            {
+                // You can also not split it up at all, and output a single 80K file.
+                string fn = outPixels + ".bin";
+                File.WriteAllBytes(fn, pixels.ToArray());
+            }
 
             // 9 bit palettes are always 256 pairs of bytes, one for each palette entry.
             // We can load this from a single file into a single bank.
@@ -103,9 +119,9 @@ namespace Layer2Converter
             File.WriteAllBytes(outPal, palByteArray);
         }
 
-        static void Convert256x192(string inFile)
+        static void Convert256x192(string inFile, int? chunkSizeKiB = null)
         {
-            // Make some temporary data structure to hold the palette entries and pixel bytes.
+            // Make a temporary data structure to hold the palette entries and pixel bytes.
             var pal = new Dictionary<Color, ushort>();
             var palindex = new Dictionary<Color, byte>();
             var pixels = new List<byte>();
@@ -113,7 +129,7 @@ namespace Layer2Converter
             // Create some output paths and filenames for the pixel banks and palette.
             string outPixels = Path.Combine(OUTPUT_PATH, Path.GetFileNameWithoutExtension(inFile));
             string outPal = Path.ChangeExtension(Path.Combine(OUTPUT_PATH, inFile), "pal");
-            // Now open our inut file, using the .NET Bitmap abstraction.
+            // Now open our input file, using the .NET Bitmap abstraction.
             using (var img = Bitmap.FromFile(Path.Combine(INPUT_PATH, inFile), true) as Bitmap)
             {
                 // .NET has a bunch of abstraction to deal with multiframe images like anigifs
@@ -174,9 +190,28 @@ namespace Layer2Converter
                 }
             }
 
-            // Output Layer 2 pixel data for 6x 8K banks in one binary file.
-            string fn = outPixels + ".bin";
-            File.WriteAllBytes(fn, pixels.ToArray());
+            if (chunkSizeKiB.HasValue && chunkSizeKiB.Value > 0)
+            {
+                // NextZXOS APIs can read and write files up to Int32.Max size, but NextBASIC can only LOAD one
+                // 16K BANK at a time, so give the option to split up the 48K of pixels into three separate 16K files,
+                // or 8K, or any other arbitrary size,
+                int bankSize = chunkSizeKiB.Value * 1024;
+                int chunkCount = pixels.Count / bankSize;
+                for (int i = 0; i < chunkCount; i++)
+                {
+                    var pixelBytes = pixels.ToArray();
+                    string fn = outPixels + (i + 1) + ".bin";
+                    var pixelBank = new byte[bankSize];
+                    Array.Copy(pixelBytes, bankSize * i, pixelBank, 0, bankSize);
+                    File.WriteAllBytes(fn, pixelBank);
+                }
+            }
+            else
+            {
+                // You can also not split it up at all, and output a single 48K file.
+                string fn = outPixels + ".bin";
+                File.WriteAllBytes(fn, pixels.ToArray());
+            }
 
             // 9 bit palettes are always 256 pairs of bytes, one for each palette entry.
             // We can load this from a single file into a single bank.
