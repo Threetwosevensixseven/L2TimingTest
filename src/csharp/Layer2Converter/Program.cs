@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
+using System.Linq;
 
 namespace Layer2Converter
 {
@@ -13,7 +14,8 @@ namespace Layer2Converter
 
         static void Main()
         {
-            Convert320x256("park.png");
+            ConvertRgb333("park.png");
+            Convert320x256("park_rgb333.png");
             Convert320x256("bridge.png");
             Convert256x192("watch.png");
         }
@@ -219,6 +221,57 @@ namespace Layer2Converter
             var palByteArray = new byte[512];
             Array.Copy(palBytes.ToArray(), palByteArray, palBytes.Count);
             File.WriteAllBytes(outPal, palByteArray);
+        }
+
+        static void ConvertRgb333(string inFile)
+        {
+            // Now open our input file, using the .NET Bitmap abstraction.
+            string inFilePath = Path.Combine(INPUT_PATH, inFile);
+            string outFilePath = Path.Combine(INPUT_PATH, Path.GetFileNameWithoutExtension(inFile) + "_rgb333" + Path.GetExtension(inFile));
+            using (var img = Bitmap.FromFile(inFilePath, true) as Bitmap)
+            {
+                // .NET has a bunch of abstraction to deal with multiframe images like anigifs
+                FrameDimension dimension = new FrameDimension(img.FrameDimensionsList[0]);
+                int frameCount = img.GetFrameCount(dimension);
+                for (int i = 0; i < frameCount; i++)
+                {
+                    img.SelectActiveFrame(dimension, i);
+                    // A 320x256 layer 2 image is 80K in size, with 10x 8K stripes going left to right across the page.
+                    // Within each stripe, the X axis of the oroginal image goes from top to bottom,
+                    // and the Y axis goes from left to right. So it looks like the image is flopped horizonally, then rotated 90 anticlockwise.
+                    // We need two loops to process the pixels. The outer loop should be the original image X axis,
+                    var pal = img.Palette;
+                    for (int x = 0; x < img.Width; x++)
+                    {
+                        // and the inner loop should be the original image Y axis.
+                        for (int y = 0; y < img.Height; y++)
+                        {
+                            // Inside these two loops, we can get each pixel in turn.
+                            // In .NET, these coloura is ARGB888.
+                            var col = img.GetPixel(x, y);
+                            // To make maximum use of Next 9bit colours, so we want to convert each one to RGB333.
+                            // For each channel, take the top 3 (most significant) bits.
+                            int r = col.R >> 5;
+                            int g = col.G >> 5;
+                            int b = col.B >> 5;
+                            // Make a new RGB8 colour and set the pixel with it
+                            int r8 = (r << 5) + (r << 2) + (r >> 1);
+                            int g8 = (g << 5) + (g << 2) + (g >> 1);
+                            int b8 = (b << 5) + (b << 2) + (b >> 1);
+                            var newCol = Color.FromArgb(r8, g8, b8);
+                            for (int p = 0; p < pal.Entries.Length; p++)
+                            {
+                                if (pal.Entries[p] == col)
+                                {
+                                    pal.Entries[p]  = newCol;
+                                }
+                            }
+                        }
+                    }
+                    img.Palette = pal;
+                }
+                img.Save(outFilePath, ImageFormat.Png);
+            }
         }
     }
 }
