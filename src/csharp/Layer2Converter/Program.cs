@@ -13,6 +13,7 @@ namespace Layer2Converter
 
         static void Main()
         {
+            Convert320x256("park.png");
             Convert320x256("bridge.png");
             Convert256x192("watch.png");
         }

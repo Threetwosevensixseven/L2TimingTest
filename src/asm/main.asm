@@ -78,7 +78,7 @@ FillBank:
                         ldir
                         ret
 ImagePal:
-                        INCBIN "../../data/bridge.pal"
+                        INCBIN "../../data/park.pal"
 LoadImage:
                         nextreg 67, %0'101'0100         ; Select layer 2 alt palette for writing and display
                         nextreg 64, 0                   ; Reset palette write index

@@ -6,7 +6,7 @@
 BINDIR = ..\..\bin
 SJASMPLUS = ..\..\tools\sjasmplus
 HDFMONKEY = ..\..\tools\hdfmonkey
-EMUDIR = C:\spec\CSpect3_0_2_1
+EMUDIR = C:\spec\CSpect3_0_15_2
 EMUSD = C:\spec\sd209\cspect-next-2gb.img
 SYNCDIR = C:\spec\sync\ON
 RM = del /F /Q

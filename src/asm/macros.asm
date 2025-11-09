@@ -1,11 +1,11 @@
 ; macros.asm
 
-BORDER                 MACRO Colour?                    ; This vesion is constant timing
+BORDER                 MACRO Colour?                    ; This version is constant timing
                           ld a, Colour?
                           out (ULA_PORT), a
                         ENDM
 
-BORDER2                  MACRO Colour?                   ; This vesion is variable timing
+BORDER2                  MACRO Colour?                   ; This version is variable timing
                             IF Colour? == 0
                                 xor a
                             ELSE
