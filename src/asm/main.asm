@@ -60,14 +60,14 @@ L2Enable+*:             ld a, SMC
                         nextreg $54, 12
                         nextreg $55, 13
 
-                        jp LoadImage
+                        //jp LoadImage
 
                         ld a, $fd                       ; Setup mode 2 interrupts for vector table at $fd00 to $fe01
                         ld i, a                         ; This points to $0000 where the screen-updating code lives
                         im 2
                         ei                              ; Finally enable mode 2 line interrupts                     
 MainLoop:                   
-                        //adc hl, bc                    ; The main loop only contains timing padding in a tight loop
+                        //adc hl, bc                      ; The main loop only contains timing padding in a tight loop
                         jp MainLoop                     ; All the work is done in the line interrupt
 FillBank:                  
                         nextreg $50, a                  ; Fill an 8K bank whose bank number is in b

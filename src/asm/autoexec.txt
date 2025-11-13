@@ -1,1 +1,1 @@
-#program autoexec#autostart  10 CD "c:/Mine"  20 IF % REG 1<64 THEN .syncfast   30 .nexload L2TimingTest.nex9998 GO TO 100009999 CLEAR : SAVE "c:/NextZXOS/autoexec.bas" LINE 0
+#program autoexec#autostart  10 CD "c:/Mine"  20 IF REG 1<64 AND REG 0>8 THEN .syncfast   30 .nexload L2TimingTest.nex9998 GO TO 100009999 CLEAR : SAVE "c:/NextZXOS/autoexec.bas" LINE 0

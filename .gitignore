@@ -1,5 +1,5 @@
-/bin/L2TimingTest.nex
 .suo
-bin
 obj
 .vs
+/src/asm/syncpoint.dat
+/src/csharp/Layer2Converter/bin

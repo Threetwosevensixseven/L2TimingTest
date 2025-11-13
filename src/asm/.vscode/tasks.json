@@ -18,12 +18,23 @@
             "problemMatcher": []
         },
         {
-            "label": "make emu",
+            "label": "make cspect",
             "type": "shell",
             "command": "",
             "args": [
                 "make",
-                "emu"
+                "cspect"
+            ],
+            "group": "build",
+            "problemMatcher": []
+        },
+        {
+            "label": "make mame",
+            "type": "shell",
+            "command": "",
+            "args": [
+                "make",
+                "mame"
             ],
             "group": "build",
             "problemMatcher": []
