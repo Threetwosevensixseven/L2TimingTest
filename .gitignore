@@ -3,3 +3,4 @@ obj
 .vs
 /src/asm/syncpoint.dat
 /src/csharp/Layer2Converter/bin
+/bin/ULARendering.nex

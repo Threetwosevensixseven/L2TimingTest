@@ -47,7 +47,7 @@ mamekill:
 	-$(KILL) mame.exe 
 
 mame: build mamekill sd
-#	CMD /C start /d $(MAMEDIR) mame tbblue -window -mouse_device none -skip_gameinfo -ui_active -nounevenstretch -aspect 2:1 -intscalex 2 -video bgfx -bgfx_screen_chains unfiltered -window -hard $(EMUSD)
+#	CMD /C start /d $(MAMEDIR) mame tbblue -window -mouse_device none -skip_gameinfo -natural -ui_active -nounevenstretch -aspect 2:1 -intscalex 2 -video bgfx -bgfx_screen_chains unfiltered -window -hard $(EMUSD)
 	CMD /C start /d $(MAMEDIR) mame tbblue -window -mouse_device none -skip_gameinfo -ui_active -nounevenstretch -aspect 2:1 -intscalex 2 -video bgfx -bgfx_screen_chains unfiltered -window -hard $(EMUSD)
 
 # Builds, copies NEX and autoexec to NextSync sync directory, and starts starts the server asynchronously.

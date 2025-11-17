@@ -48,4 +48,10 @@ SETUPL2                 MACRO Bank?, Colour?
                             ld a, Bank?
                             ld b, Colour?
                             call FillBank
-                        ENDM                 
+                        ENDM
+
+PRINT                   MACRO Addr?, Len?
+                            ld de, Addr?
+                            ld bc, Len?
+                            call ROM3_PRINT
+                        ENDM

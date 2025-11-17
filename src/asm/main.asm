@@ -44,10 +44,107 @@ Start:
                         nextreg 24, 0                   ; Set max clip window for 320x256 layer 2
                         nextreg 24, 255
                         nextreg 24, 0
-                        nextreg 24, 255 
+                        nextreg 24, 255
+
+                        nextreg 20, 0                   ; Set global transparency to black (RGB332)
+                        nextreg 74, 0                   ; Set transparency fallback to black (RGB332)
+                        nextreg 21, %000'010'00         ; Put sprites on top, then ULA, then layer 2 (SUL)
+                        nextreg $52, 10                 ; Page in ULA screen
+                        FILLLDIR $4000, $1800, 0        ; Clear ULA pixels
+                        FILLLDIR $5800,$300,%01'000'111 ; Clear ULA pixels to dim black/black
+                        nextreg 67, %0'100'011'0        ; Select ULA alt palette for writing and display
+                        nextreg 64, 16                  ; Set palette write index to ULA dim black paper
+                        nextreg 65, %000'000'00         ; Redefine ULA dim black paper as black (RGB332)
+
+                        nextreg $50, 255
+                        nextreg $51, 255
+                        nextreg $53, 11
+                        ld a, 2
+                        call ROM3_CHAN_OPEN
+                        ld a, %01'010'111
+                        ld (ROM3_ATTR_TL), a
+                        NRREAD 17                       ; Read video mode (VGA0..6, HDMI)
+                        and %111
+                        rlca
+                        rlca
+                        ld hl, Timing.Table             ; Copy video mode text to message
+                        add hl, a
+                        ld de, Message.Timing
+                        ld bc, 4
+                        ldir
+                        NRREAD 5                        ; Read FPS(50/60)
+                        and %100
+                        rrca
+                        ld hl, Fps.Table                ; Copy FPS text to message
+                        add hl, a
+                        ld de, Message.Fps
+                        ld bc, 2
+                        ldir
+                        NRREAD 1                        ; Read core major/minor version (xxx.yyy)
+                        push af
+                        swapnib
+                        and %1111
+                        ld de, Core                     ; Write core major version to buffer
+                        call DispA
+                        pop af
+                        and %1111                        
+                        call DispA                      ; Write core minor version to buffer
+                        NRREAD 14                       ; Read core sub version (.zzz)
+                        call DispA                      ; Write core minor version to buffer 
+                        ld a, '.'                       ; Format core text with dots
+                        ld (Core+3), a
+                        ld (Core+6), a
+                        ld de, Message.Core             ; Copy core text to message without leading zeroes
+                        ld hl, Core
+                        ld a, (hl)
+                        cp '0'
+                        jr nz, .CopyCore
+                        inc hl
+                        ld a, (hl)
+                        cp '0'
+                        jr nz, .CopyCore
+                        inc hl
+.CopyCore:              ld a, (hl)
+.NextChar:              ld (de), a
+                        inc de
+                        inc hl
+                        ld a, (hl)
+                        cp 0
+                        jr nz, .NextChar
+                        NRREAD 15                       ; Read core issue
+                        and %11                         ; We don't have print routines for anything newer than issue 5 so truncate
+                        ld hl, Issue.Table
+                        add hl, a
+                        ld a, (hl)                      ; Write core issue text to message
+                        ld (Message.Issue), a
+                        NRREAD 7                        ; Read CPU speed (0..3)
+                        and %11                         ; We don't have print routines for anything faster than 28 so truncate
+                        rlca
+                        rlca
+                        rlca
+                        ld hl, CPU.Table
+                        add hl, a                       ; Write CPU speed text to message
+                        ld de, Message.CPU
+                        ld bc, 8
+                        ldir
+                        NRREAD 3                        ; Read machine display timing
+                        swapnib
+                        and %111                        ; Isolate display timing
+                        dec a                           ; and subtract 1 to put in range 0..3
+                        ld d, a
+                        ld e, 10
+                        mul d, e
+                        ld a, e
+                        ld hl, Machine.Table            ; Copy display timing text to message
+                        add hl, a
+                        ld de, Message.Machine
+                        ld bc, 10
+                        ldir                                    
+                        PRINT Message, Message.Len      ; Print message in center of screen
+                        
 L2Enable+*:             ld a, SMC
                         or %1'000'0000
-                        nextreg 112, %00'01'0000        ; Set layer 2 to 320x2q56 mode
+                        nextreg 112, %00'01'0000        ; Set layer 2 to 320x256 mode                    
                         nextreg 105, a                  ; Enable layer 2
                         nextreg 34, %00000'11'0         ; Disable ULA interrupt and enable line interrupt
                         nextreg 35, 0                   ; Set line interrupt to interrupt at line 0
@@ -60,7 +157,7 @@ L2Enable+*:             ld a, SMC
                         nextreg $54, 12
                         nextreg $55, 13
 
-                        //jp LoadImage
+                        jp LoadImage
 
                         ld a, $fd                       ; Setup mode 2 interrupts for vector table at $fd00 to $fe01
                         ld i, a                         ; This points to $0000 where the screen-updating code lives
@@ -77,10 +174,65 @@ FillBank:
                         ld bc, $1fff
                         ldir
                         ret
+DispA:                  ld c, -100                      ; From http://wikiti.brandonw.net/index.php?title=Z80_Routines:Other:DispA
+                        call .Na1
+                        ld	c, -10
+                        call .Na1
+	                    ld	c, -1
+.Na1:                   ld	b, '0'-1
+.Na2:                   inc	b
+	                    add	a, c
+                        jr	c, .Na2
+                        sub	c
+                        push af
+                        ld	a, b
+	                    ld (de), a
+                        inc de
+	                    pop af
+	                    ret
+Message:                DB AT, TEXTY+0, TEXTX
+Message.Timing:         DB "          "
+                        DB AT, TEXTY+1, TEXTX
+Message.Fps:            DB "   Hz     "
+                        DB AT, TEXTY+2, TEXTX
+Message.Core:           DB "          "
+                        DB AT, TEXTY+3, TEXTX, "Issue "
+Message.Issue:          DB "    "
+                        DB AT, TEXTY+4, TEXTX
+Message.CPU:            DB "          "
+                        DB AT, TEXTY+5, TEXTX
+Message.Machine:        DB "          "
+Message.Len             EQU $-Message
+                        DISPLAY Message.Len
+Core:                   DB "         ", 0
+
+Timing.Table:           DB "VGA0"
+                        DB "VGA1"
+                        DB "VGA2"
+                        DB "VGA3"
+                        DB "VGA4"
+                        DB "VGA5"
+                        DB "VGA6"
+                        DB "HDMI"
+Fps.Table:              DB "50"
+                        DB "60"
+Issue.Table:            DB "2"
+                        DB "3"
+                        DB "4"
+                        DB "5"
+CPU.Table:              DB "3.5 MHz "
+                        DB "7 MHz   "
+                        DB "14 MHz  "
+                        DB "28 MHz  "
+Machine.Table:          DB "48K Timing"
+                        DB "128 Timing"
+                        DB "+3 Timing "
+                        DB "Pentagon  "
+
 ImagePal:
                         INCBIN "../../data/park_rgb333.pal"
 LoadImage:
-                        nextreg 67, %0'101'0100         ; Select layer 2 alt palette for writing and display
+                        nextreg 67, %0'101'011'0        ; Select layer 2 alt palette for writing and display
                         nextreg 64, 0                   ; Reset palette write index
                         ld b, 0                         ; Loop 256 times, once for each palette entry
                         ld hl, ImagePal
@@ -92,7 +244,10 @@ LoadImage:
                         inc hl
                         djnz .Loop                      ; Continue for other palette entries                      
                         nextreg 18, 24
-                        jr $                     
+                        jr $ 
+
+                        DISPLAY "Last address before IM2 vector=", $
+                        ASSERT $ < $fd00,                 Code is >= $fd00
 Im2Vector:
                         ORG $fd00                       ; IM2 vector table points to ISR at $0000,
                         REPT 257                        ; whatever value is placed on the bus for the LSB.
