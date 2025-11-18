@@ -23,3 +23,6 @@ FLASH                   EQU 18
 INVERSE                 EQU 20
 OVER                    EQU 21
 AT                      EQU 22
+
+; Copper
+Copper.ProgramSize      EQU 1024

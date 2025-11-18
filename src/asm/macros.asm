@@ -55,3 +55,28 @@ PRINT                   MACRO Addr?, Len?
                             ld bc, Len?
                             call ROM3_PRINT
                         ENDM
+
+COPPER_CONTROL          MACRO Command?, Position?
+                            nextreg $62, ((Command? & %11) << 6) | ((high Position?) & %111)
+                            nextreg $61, low Position?
+                        ENDM
+
+COPPER_WAIT             MACRO X?, Y?
+                            DB %10000000 | (((X?) & %111111) << 1) | ((high (Y?)) & %1)
+                            DB low (Y?)
+                        ENDM
+
+COPPER_MOVE             MACRO Reg?, Val?
+                            DB Reg? & %01111111
+                            DB Val? & %11111111
+                        ENDM
+
+COPPER_HALT             MACRO
+                            DW $ffff
+                        ENDM
+
+COPPER_WAITFRAMES       MACRO Frames?
+                            REPT Frames?, Count?
+                                COPPER_WAIT 0, (Frames?-1)-Count?
+                            ENDR
+                        ENDM

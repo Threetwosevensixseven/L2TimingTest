@@ -164,6 +164,21 @@ Start:
                         ld bc, 10
                         ldir                                    
                         PRINT Message.Table, Message.Len; Print message in center of screen
+
+LoadCopperProgram:
+                        NRREAD 104                      ; Read ULA enabled register
+                        or %1'000'0000                  ; Set the bit to disable the ULA display
+                        ld (Copper.NoUla+1), a          ; and write it into the copper program at the right place
+                        COPPER_CONTROL %00, 0           ; Stop the copper and position to program index 0
+                        ld bc, Copper.InstructionCount*2; The number of bytes in the copper program, excluding NOP padding
+                        ld hl, Copper.Program           ; Address of auto-generated copper program file
+.CopperLoop:            ld a, (hl)                      ; Read copper instruction bytes
+                        nextreg $60, a                  ; And write them to the copper program register
+                        inc hl
+                        dec bc                                         
+                        ld a, b                         
+                        or c
+                        jr nz, .CopperLoop              ; Repeat until no more bytes left to read and update        
                         
 L2Enable+*:             ld a, SMC
                         or %1'000'0000
@@ -179,6 +194,8 @@ L2Enable+*:             ld a, SMC
                         nextreg $53, 9
                         nextreg $54, 12
                         nextreg $55, 13
+
+                        COPPER_CONTROL %01, 0           ; Turn the copper on
 
                         jp LoadImage
 

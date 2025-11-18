@@ -79,3 +79,9 @@ Draw.Table:
 Draw.Size               EQU 5
 Draw.Len                EQU $-Draw.Table
 Draw.Rows               EQU Draw.Len/Draw.Size
+
+Copper.Program:
+                        COPPER_WAITFRAMES 150
+Copper.NoUla:           COPPER_MOVE 104, SMC
+                        COPPER_HALT
+Copper.InstructionCount EQU ($-Copper.Program)/2        ; Instruction size: 2 bytes, capacity: 1024 instructions
