@@ -51,7 +51,7 @@ Start:
                         nextreg 21, %000'010'00         ; Put sprites on top, then ULA, then layer 2 (SUL)
                         nextreg $52, 10                 ; Page in ULA screen
                         FILLLDIR $4000, $1800, 0        ; Clear ULA pixels
-                        FILLLDIR $5800,$300,%01'000'111 ; Clear ULA pixels to dim black/black
+                        FILLLDIR $5800,$300,%00'000'001 ; Clear ULA pixels to dim yellow ink, black paper
                         nextreg 67, %0'100'011'0        ; Select ULA alt palette for writing and display
                         nextreg 64, 16                  ; Set palette write index to ULA dim black paper
                         nextreg 65, %000'000'00         ; Redefine ULA dim black paper as black (RGB332)
@@ -59,6 +59,29 @@ Start:
                         nextreg $50, 255
                         nextreg $51, 255
                         nextreg $53, 11
+
+                        ld ixl, Draw.Rows               ; Process every row in the draw table
+                        ld hl, Draw.Table
+.RowLoop:               ld e, (hl)
+                        inc hl
+                        ld d, (hl)                      ; de = draw address
+                        inc hl
+                        ld b, (hl)                      ; b  = draw count
+                        inc hl
+                        ld a, (hl)                      ; a' = address increment
+                        ex af, af'
+                        inc hl
+                        ld a, (hl)                      ; a  = draw value)
+.DrawLoop:              ld (de), a                      ; Write value to draw address
+                        ex af, af'
+                        add de, a                       ; Increase draw address by Inc
+                        ex af, af'
+                        dec b
+                        jr nz, .DrawLoop                ; Write more values to draw address until Count is reached
+                        inc hl
+                        dec ixl
+                        jr nz, .RowLoop                 ; Process the next row in the draw table
+
                         ld a, 2
                         call ROM3_CHAN_OPEN
                         ld a, %01'010'111
@@ -84,7 +107,7 @@ Start:
                         push af
                         swapnib
                         and %1111
-                        ld de, Core                     ; Write core major version to buffer
+                        ld de, Core.Table               ; Write core major version to buffer
                         call DispA
                         pop af
                         and %1111                        
@@ -92,10 +115,10 @@ Start:
                         NRREAD 14                       ; Read core sub version (.zzz)
                         call DispA                      ; Write core minor version to buffer 
                         ld a, '.'                       ; Format core text with dots
-                        ld (Core+3), a
-                        ld (Core+6), a
+                        ld (Core.Table+3), a
+                        ld (Core.Table+6), a
                         ld de, Message.Core             ; Copy core text to message without leading zeroes
-                        ld hl, Core
+                        ld hl, Core.Table
                         ld a, (hl)
                         cp '0'
                         jr nz, .CopyCore
@@ -140,7 +163,7 @@ Start:
                         ld de, Message.Machine
                         ld bc, 10
                         ldir                                    
-                        PRINT Message, Message.Len      ; Print message in center of screen
+                        PRINT Message.Table, Message.Len; Print message in center of screen
                         
 L2Enable+*:             ld a, SMC
                         or %1'000'0000
@@ -190,45 +213,8 @@ DispA:                  ld c, -100                      ; From http://wikiti.bra
                         inc de
 	                    pop af
 	                    ret
-Message:                DB AT, TEXTY+0, TEXTX
-Message.Timing:         DB "          "
-                        DB AT, TEXTY+1, TEXTX
-Message.Fps:            DB "   Hz     "
-                        DB AT, TEXTY+2, TEXTX
-Message.Core:           DB "          "
-                        DB AT, TEXTY+3, TEXTX, "Issue "
-Message.Issue:          DB "    "
-                        DB AT, TEXTY+4, TEXTX
-Message.CPU:            DB "          "
-                        DB AT, TEXTY+5, TEXTX
-Message.Machine:        DB "          "
-Message.Len             EQU $-Message
-                        DISPLAY Message.Len
-Core:                   DB "         ", 0
 
-Timing.Table:           DB "VGA0"
-                        DB "VGA1"
-                        DB "VGA2"
-                        DB "VGA3"
-                        DB "VGA4"
-                        DB "VGA5"
-                        DB "VGA6"
-                        DB "HDMI"
-Fps.Table:              DB "50"
-                        DB "60"
-Issue.Table:            DB "2"
-                        DB "3"
-                        DB "4"
-                        DB "5"
-CPU.Table:              DB "3.5 MHz "
-                        DB "7 MHz   "
-                        DB "14 MHz  "
-                        DB "28 MHz  "
-Machine.Table:          DB "48K Timing"
-                        DB "128 Timing"
-                        DB "+3 Timing "
-                        DB "Pentagon  "
-
+                        INCLUDE "tables.asm"
 ImagePal:
                         INCBIN "../../data/park_rgb333.pal"
 LoadImage:
