@@ -29,11 +29,26 @@ MFBREAK                 MACRO                           ; Intended for NextZXOS 
                         ENDM                            ; A different macro is needed for older cores.
 
 NRREAD                  MACRO Register?                 ; Nextregs have to be read through the register I/O port pair,
-                        ld bc, $243B                    ; as there is no dedicated ZX80N opcode like there is for
-                        ld a, Register?                 ; writes.
-                        out (c), a
-                        inc b
-                        in a, (c)
+                            ld bc, $243B                ; as there is no dedicated ZX80N opcode like there is for
+                            ld a, Register?             ; writes.
+                            out (c), a
+                            inc b
+                            in a, (c)
+                        ENDM
+
+NEXTREGIO               MACRO Register?, Value?
+                            ld bc, $243B
+                            ld a, Register?
+                            out (c), a
+                            inc b
+                            ld a, Value?
+                            out (c), a
+                        ENDM
+
+OUTIO                   MACRO Port?, Value?
+                            ld bc, Port?
+                            ld a, Value?
+                            out (c), a
                         ENDM
 
 FILLLDIR                MACRO Addr?, Size?, Value?

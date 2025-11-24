@@ -18,27 +18,29 @@ Start:
                         and %0'111'1111                 ; Disable layer 2
                         nextreg 105, a                  ;   and apply it.
 
-                        SETUPL2 18, %000'000'11         ; Fill 10x 8K layer 2 banks
-                        SETUPL2 19, %000'111'00         ; with alternate blue/green stripes
-                        SETUPL2 20, %000'000'11
-                        SETUPL2 21, %000'111'00
-                        SETUPL2 22, %000'000'11
-                        SETUPL2 23, %000'111'00
-                        SETUPL2 24, %000'000'11
-                        SETUPL2 25, %000'111'00
-                        SETUPL2 26, %000'000'11
-                        SETUPL2 27, %000'111'00
-                       
-                        SETUPL2 28, %111'111'00         ; Fill 10x 8K layer 2 banks
-                        SETUPL2 29, %000'000'00         ; with alternate yellow/black stripes
-                        SETUPL2 30, %111'111'00
-                        SETUPL2 31, %000'000'00
-                        SETUPL2 32, %111'111'00
-                        SETUPL2 33, %000'000'00
-                        SETUPL2 34, %111'111'00
-                        SETUPL2 35, %000'000'00
-                        SETUPL2 36, %111'111'00
-                        SETUPL2 37, %000'000'00
+                        IFNDEF INCPATTERN
+                            SETUPL2 18, %000'000'11     ; Fill 10x 8K layer 2 banks
+                            SETUPL2 19, %000'111'00     ; with alternate blue/green stripes
+                            SETUPL2 20, %000'000'11
+                            SETUPL2 21, %000'111'00
+                            SETUPL2 22, %000'000'11
+                            SETUPL2 23, %000'111'00
+                            SETUPL2 24, %000'000'11
+                            SETUPL2 25, %000'111'00
+                            SETUPL2 26, %000'000'11
+                            SETUPL2 27, %000'111'00
+                        
+                            SETUPL2 28, %111'111'00     ; Fill 10x 8K layer 2 banks
+                            SETUPL2 29, %000'000'00     ; with alternate yellow/black stripes
+                            SETUPL2 30, %111'111'00
+                            SETUPL2 31, %000'000'00
+                            SETUPL2 32, %111'111'00
+                            SETUPL2 33, %000'000'00
+                            SETUPL2 34, %111'111'00
+                            SETUPL2 35, %000'000'00
+                            SETUPL2 36, %111'111'00
+                            SETUPL2 37, %000'000'00
+                        ENDIF
 
                         nextreg 18, 9                   ; Set base layer 2 bank to 16K bank 9 (green/blue)     
                         nextreg 24, 0                   ; Set max clip window for 320x256 layer 2
@@ -188,6 +190,8 @@ L2Enable+*:             ld a, SMC
                         nextreg 35, 0                   ; Set line interrupt to interrupt at line 0
                         nextreg 100, 32                 ; Set video offset so that line 0 is the first 320x256 line
 
+                        call DoPokes
+
                         nextreg $50, 6                  ; Set lower 48K to contain the line interrupt handler
                         nextreg $51, 7                  ; with the screen-changing code.
                         nextreg $52, 8
@@ -195,9 +199,11 @@ L2Enable+*:             ld a, SMC
                         nextreg $54, 12
                         nextreg $55, 13
 
+                        OUTIO 0x2f3b, 0                 ; Put MAME back to Normal Speed after reset
+
                         COPPER_CONTROL %01, 0           ; Turn the copper on
 
-                        jp LoadImage
+                        //jp LoadImage
 
                         ld a, $fd                       ; Setup mode 2 interrupts for vector table at $fd00 to $fe01
                         ld i, a                         ; This points to $0000 where the screen-updating code lives
@@ -232,6 +238,7 @@ DispA:                  ld c, -100                      ; From http://wikiti.bra
 	                    ret
 
                         INCLUDE "tables.asm"
+                        INCLUDE "pokes.asm"                    
 ImagePal:
                         INCBIN "../../data/park_rgb333.pal"
 LoadImage:
@@ -265,5 +272,10 @@ Im2Vector:
                         SAVENEX OPEN "../../bin/L2TimingTest.nex", Start, $0000
                         SAVENEX CORE 3, 01, 05          ; Next core 3.01.05 required as minimum
                         //SAVENEX SCREEN BMP "../../img/loading-screen3.bmp"
-                        SAVENEX BANK 0, 3, 4, 6, 24, 25, 26, 27, 28
+                        SAVENEX BANK 0, 3, 4, 6
+                        IFDEF INCPATTERN
+                            SAVENEX BANK 9, 10, 11, 12, 13
+                            SAVENEX BANK 14, 15, 16, 17, 18
+                        ENDIF
+                        SAVENEX BANK 24, 25, 26, 27, 28
                         SAVENEX CLOSE

@@ -5,6 +5,9 @@ SMC                     EQU 0
 TEXTX                   EQU (32-10)/2
 TEXTY                   EQU (24-6)/2
 
+; Defines
+                        DEFINE INCPATTERN 1
+
 ; Ports
 ULA_PORT                EQU $e                          ; out (254), a
 

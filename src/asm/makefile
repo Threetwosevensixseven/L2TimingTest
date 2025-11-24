@@ -48,7 +48,9 @@ mamekill:
 
 mame: build mamekill sd
 #	CMD /C start /d $(MAMEDIR) mame tbblue -window -mouse_device none -skip_gameinfo -natural -ui_active -nounevenstretch -aspect 2:1 -intscalex 2 -video bgfx -bgfx_screen_chains unfiltered -window -hard $(EMUSD)
-	CMD /C start /d $(MAMEDIR) mame tbblue -window -mouse_device none -skip_gameinfo -ui_active -nounevenstretch -aspect 2:1 -intscalex 2 -video bgfx -bgfx_screen_chains unfiltered -window -hard $(EMUSD)
+	CMD /C start /d $(MAMEDIR) mame tbblue -d -plugin nextfaststart,debugstart -window -mouse_device none -skip_gameinfo -ui_active -nounevenstretch -aspect 2:1 -intscalex 2 -video bgfx -bgfx_screen_chains unfiltered -window -hard $(EMUSD)
+#C:\spec\mame\mame.exe tbblue -window -mouse_device none -skip_gameinfo -ui_active -nounevenstretch -aspect 2:1 -video bgfx -bgfx_screen_chains unfiltered -window -hard C:\spec\sd209\cspect-next-2gb.img
+#	nextfaststart,debugstart,nextbreak 
 
 # Builds, copies NEX and autoexec to NextSync sync directory, and starts starts the server asynchronously.
 # Autoexec will run .fastsync then run the NEX, next time you F4 soft reset.

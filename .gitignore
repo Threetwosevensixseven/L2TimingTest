@@ -4,3 +4,4 @@ obj
 /src/asm/syncpoint.dat
 /src/csharp/Layer2Converter/bin
 /bin/ULARendering.nex
+/src/csharp/PatternGen/bin

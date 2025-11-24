@@ -11,6 +11,7 @@ Screen:
                         REPT 7                          ; Any necessary timing padding
                             cp 0
                         ENDR
+                        inc iy
                         ld a, 0                         ; Set A for border change next frame     
                         ei
                         reti
