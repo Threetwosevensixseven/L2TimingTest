@@ -19,7 +19,7 @@ namespace PatternGen
         const byte YELLOW  = 0b11111100; // 6
         const byte WHITE   = 0b11111111; // 7
 
-        static void Main(string[] args)
+        static void Main()
         {
             var banks = new Dictionary<int, byte[]>();
             int bank = 18;
@@ -46,7 +46,7 @@ namespace PatternGen
                 .Setup(bank++, WHITE);
 
             // 18, 28
-
+            
             banks.Fill(18, 28, 00, 0, RED,   RED,   1, 3, 2, 3);
             banks.Fill(18, 28, 01, 0, BLACK, BLACK, 1, 3, 2, 3);
             banks.Fill(18, 28, 02, 0, RED,   RED,   2, 2, 3, 2);
@@ -120,6 +120,9 @@ namespace PatternGen
             banks.Fill(19, 29, 29, 0, BLACK,   BLACK,   1, 3, 2, 3);
             banks.Fill(19, 29, 30, 0, MAGENTA, MAGENTA, 2, 2, 3, 2);
             banks.Fill(19, 29, 31, 0, BLACK,   BLACK,   2, 2, 3, 2);
+
+            banks.SaveAsPng8_320x256(18, Path.Combine(OUTPUT_PATH, $"pattern_18-27.png"));
+            banks.SaveAsPng8_320x256(28, Path.Combine(OUTPUT_PATH, $"pattern_28-37.png"));
 
             foreach (var key in banks.Keys)
             {
