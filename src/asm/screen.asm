@@ -2,6 +2,8 @@
                         ORG $0000
 Screen:
                         out (ULA_PORT), a               ; More precise to start ISR with OUT
+                        nextreg 7, %00                  ; Switch to 3.5MHz to sync frame to 0T
+                        nextreg 7, %10                  ; Switch back to 14MHz, now synced to 0T
                         REPT 5838                       ; At VGA50 14MHz +3 timing this covers 320x256 layer 2
                             nextreg 18, 9               ; 5,838 x 2 = 11,676 
                             nextreg 18, 14              ; 11,676 x 20T = 233,520T

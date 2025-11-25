@@ -17,6 +17,9 @@ Start:
                         ld (L2Enable), a                ;   and preserve it.
                         and %0'111'1111                 ; Disable layer 2
                         nextreg 105, a                  ;   and apply it.
+                        NRREAD 8                        ; Read contention register,
+                        and %1011'1111                  ;   enable contention,
+                        nextreg 8, a                    ;   and apply it for when we switch down to 3.5MHz in the interrupt.
 
                         IFNDEF INCPATTERN
                             SETUPL2 18, %000'000'11     ; Fill 10x 8K layer 2 banks
@@ -205,13 +208,21 @@ L2Enable+*:             ld a, SMC
 
                         //jp LoadImage
 
+                        ADC HL,BC
+                        ADC HL,BC
+                        ADC HL,BC
+
                         ld a, $fd                       ; Setup mode 2 interrupts for vector table at $fd00 to $fe01
                         ld i, a                         ; This points to $0000 where the screen-updating code lives
                         im 2
                         ei                              ; Finally enable mode 2 line interrupts                     
 MainLoop:                   
                         //adc hl, bc                      ; The main loop only contains timing padding in a tight loop
-                        jp MainLoop                     ; All the work is done in the line interrupt
+                        halt
+                        //jp MainLoop                     ; All the work is done in the line interrupt
+                        jr MainLoop
+
+                        DISPLAY "MainLoop=",MainLoop
 FillBank:                  
                         nextreg $50, a                  ; Fill an 8K bank whose bank number is in b
                         ld hl, $0000                    ; with the byte value in a.
