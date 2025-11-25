@@ -49,6 +49,17 @@
             ],
             "group": "build",
             "problemMatcher": []
+        },
+        {
+            "label": "make zes",
+            "type": "shell",
+            "command": "",
+            "args": [
+                "make",
+                "zes"
+            ],
+            "group": "build",
+            "problemMatcher": []
         }
     ]
 }

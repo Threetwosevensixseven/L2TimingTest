@@ -8,12 +8,15 @@ SJASMPLUS = ..\..\tools\sjasmplus
 HDFMONKEY = ..\..\tools\hdfmonkey
 EMUDIR = C:\spec\CSpect3_0_15_2
 MAMEDIR = C:\spec\mame
+ZESDIR = C:\spec\ZEsarUX_windows-12.1
 EMUSD = C:\spec\sd209\cspect-next-2gb.img
+ZESSD = C:\spec\ZEsarUX_windows-12.1\tbblue.mmc
 SYNCDIR = C:\spec\sync\ON
 RM = del /F /Q
 MD = md
 KILL = taskkill /F /IM
 PY = python3.13.exe
+TOUCH = ..\..\tools\busybox.exe touch -c
 
 # Default target is to build the NEX file from source
 build:
@@ -25,7 +28,7 @@ clean:
 
 sd:
 	-$(HDFMONKEY) mkdir $(EMUSD) Mine
-	$(HDFMONKEY) put $(EMUSD) $(BINDIR)/L2TimingTest.nex Mine
+	$(HDFMONKEY) put $(EMUSD) $(BINDIR)/L2TimingTest.nex Mine	
 	$(HDFMONKEY) put $(EMUSD) autoexec.bas NextZXOS
 	-$(HDFMONKEY) mkdir $(EMUSD) Mine	
 #   Uncomment this to get the current autoexec.bas/.txt in the image back into the project:
@@ -34,6 +37,14 @@ sd:
 #	$(HDFMONKEY) put $(EMUSD) C:\spec\sync\sync dot
 #	$(HDFMONKEY) put $(EMUSD) C:E\spec\sync\syncslow dot
 #make 	$(HDFMONKEY) put $(EMUSD) C:\spec\sync\syncfast dot
+
+sdzes:
+	-$(HDFMONKEY) mkdir $(ZESSD) Mine
+	$(HDFMONKEY) put $(ZESSD) $(BINDIR)/L2TimingTest.nex Mine
+#	$(HDFMONKEY) put $(ZESSD) ..\zes\autoexec.bas NextZXOS
+#   Uncomment this to get the current autoexec.bas/.txt in the image back into the project:
+	$(HDFMONKEY) get $(ZESSD) /NextZXOS/autoexec.bas ..\zes\autoexec.bas
+	$(HDFMONKEY) get $(ZESSD) /NextZXOS/autoexec.txt ..\zes\autoexec.txt
 
 # Builds, injects build NEX and autoexec into CSpect SD image, and starts CSpect asynchronously.
 # Autoexec will skip running .fastsync (because CSpect defaults to core version 4.0.0), then run the NEX.
@@ -52,6 +63,10 @@ mame: build mamekill sd
 #C:\spec\mame\mame.exe tbblue -window -mouse_device none -skip_gameinfo -ui_active -nounevenstretch -aspect 2:1 -video bgfx -bgfx_screen_chains unfiltered -window -hard C:\spec\sd209\cspect-next-2gb.img
 #	nextfaststart,debugstart,nextbreak 
 
+zes: build sdzes
+	-$(KILL) zesarux.exe 
+	CMD /C start /d "$(ZESDIR)" zesarux.exe --machine tbblue --frameskip 0 --disable-autoframeskip --nosplash --nowelcomemessage --quickexit --gui-style "ZXSpectr" --def-f-function F4 "HardReset" --def-f-function F10 "ExitEmulator"
+
 # Builds, copies NEX and autoexec to NextSync sync directory, and starts starts the server asynchronously.
 # Autoexec will run .fastsync then run the NEX, next time you F4 soft reset.
 # The first time you make sync, run .fasysync manually first to get the files.
@@ -60,6 +75,7 @@ sync: build
 	copy "$(BINDIR)\L2TimingTest.nex" "$(SYNCDIR)\Mine\*.*"
 	-$(MD) "$(SYNCDIR)\NextZXOS"
 	copy autoexec.bas "$(SYNCDIR)\NextZXOS\*.*"
+	$(TOUCH) "$(SYNCDIR)\NextZXOS\autoexec.bas"
 
 # Warning: kills all running python processes
 # Remove these two lines and start the server manually if that bothers you
