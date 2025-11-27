@@ -48,7 +48,6 @@
     <Compile Include="Classes\Colour.cs" />
     <Compile Include="Classes\Pattern.cs" />
     <Compile Include="Classes\Patterns.cs" />
-    <Compile Include="Classes\x.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
