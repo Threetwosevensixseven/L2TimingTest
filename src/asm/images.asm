@@ -4,7 +4,7 @@
 ImageEnd:
                         ASSERT $$ImageEnd=58 & $=$0000,   Image is not 80kiB
 
-                        IFDEF INCPATTERN
+                        IF INCPATTERNBANKS == 1
                             MMU 0 n, 18, $0000
                             
                             INCBIN "../../data/pattern_18.bin"

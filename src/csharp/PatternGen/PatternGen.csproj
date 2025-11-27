@@ -44,8 +44,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BankExtensions.cs" />
-    <Compile Include="Pattern.cs" />
+    <Compile Include="Classes\Banks.cs" />
+    <Compile Include="Classes\Colour.cs" />
+    <Compile Include="Classes\Pattern.cs" />
+    <Compile Include="Classes\Patterns.cs" />
+    <Compile Include="Classes\x.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

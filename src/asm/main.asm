@@ -12,7 +12,7 @@
                         ORG $c000                       ; Setup code lives in upper 16K                      
 Start:
                         di                              ; Disable interrupts while setting up
-                        nextreg 7, %10                  ; Set 14MHz (avoids extra wait states present at 28MHz)
+                        nextreg 7, %11                  ; Set 24MHz while setting up
                         NRREAD 105                      ; Read layer 2 state
                         ld (L2Enable), a                ;   and preserve it.
                         and %0'111'1111                 ; Disable layer 2
@@ -21,7 +21,7 @@ Start:
                         and %1011'1111                  ;   enable contention,
                         nextreg 8, a                    ;   and apply it for when we switch down to 3.5MHz in the interrupt.
 
-                        IFNDEF INCPATTERN
+                        IF INCPATTERNBANKS != 1
                             SETUPL2 18, %000'000'11     ; Fill 10x 8K layer 2 banks
                             SETUPL2 19, %000'111'00     ; with alternate blue/green stripes
                             SETUPL2 20, %000'000'11
@@ -145,16 +145,19 @@ Start:
                         add hl, a
                         ld a, (hl)                      ; Write core issue text to message
                         ld (Message.Issue), a
+                        nextreg 7, %10                  ; Set speed to 14MHz before reading for display (this will be parameterized better)
                         NRREAD 7                        ; Read CPU speed (0..3)
                         and %11                         ; We don't have print routines for anything faster than 28 so truncate
                         rlca
                         rlca
                         rlca
                         ld hl, CPU.Table
-                        add hl, a                       ; Write CPU speed text to message
+                        add hl, a                       ; Write CPU speed text to 
+                        nextreg 7, %11                  ; Set speed back to 28 for remainder of setup (this will be parameterized better)
                         ld de, Message.CPU
                         ld bc, 8
                         ldir
+          
                         NRREAD 3                        ; Read machine display timing
                         swapnib
                         and %111                        ; Isolate display timing
@@ -174,6 +177,9 @@ LoadCopperProgram:
                         NRREAD 104                      ; Read ULA enabled register
                         or %1'000'0000                  ; Set the bit to disable the ULA display
                         ld (Copper.NoUla+1), a          ; and write it into the copper program at the right place
+L2Enable+*:             ld a, SMC
+                        or %1'000'0000                  ; Set the bit to enable Layer 2
+                        ld (Copper.ShowL2+1), a         ; and write it into the copper program at the right place
                         COPPER_CONTROL %00, 0           ; Stop the copper and position to program index 0
                         ld bc, Copper.InstructionCount*2; The number of bytes in the copper program, excluding NOP padding
                         ld hl, Copper.Program           ; Address of auto-generated copper program file
@@ -185,10 +191,8 @@ LoadCopperProgram:
                         or c
                         jr nz, .CopperLoop              ; Repeat until no more bytes left to read and update        
                         
-L2Enable+*:             ld a, SMC
-                        or %1'000'0000
                         nextreg 112, %00'01'0000        ; Set layer 2 to 320x256 mode                    
-                        nextreg 105, a                  ; Enable layer 2
+                        //nextreg 105, a                  ; Enable layer 2
                         nextreg 34, %00000'11'0         ; Disable ULA interrupt and enable line interrupt
                         nextreg 35, 0                   ; Set line interrupt to interrupt at line 0
                         nextreg 100, 32                 ; Set video offset so that line 0 is the first 320x256 line
@@ -215,6 +219,7 @@ L2Enable+*:             ld a, SMC
                         ld a, $fd                       ; Setup mode 2 interrupts for vector table at $fd00 to $fe01
                         ld i, a                         ; This points to $0000 where the screen-updating code lives
                         im 2
+                        nextreg 7, %10                  ; Set 14MHz (avoids extra wait states present at 28MHz)
                         ei                              ; Finally enable mode 2 line interrupts                     
 MainLoop:                   
                         //adc hl, bc                      ; The main loop only contains timing padding in a tight loop
@@ -284,7 +289,7 @@ Im2Vector:
                         SAVENEX CORE 3, 01, 05          ; Next core 3.01.05 required as minimum
                         //SAVENEX SCREEN BMP "../../img/loading-screen3.bmp"
                         SAVENEX BANK 0, 3, 4, 6
-                        IFDEF INCPATTERN
+                        IF INCPATTERNBANKS == 1
                             SAVENEX BANK 9, 10, 11, 12, 13
                             SAVENEX BANK 14, 15, 16, 17, 18
                         ENDIF

@@ -81,7 +81,10 @@ Draw.Len                EQU $-Draw.Table
 Draw.Rows               EQU Draw.Len/Draw.Size
 
 Copper.Program:
-                        COPPER_WAITFRAMES 150
-Copper.NoUla:           COPPER_MOVE 104, SMC
-                        COPPER_HALT
-Copper.InstructionCount EQU ($-Copper.Program)/2        ; Instruction size: 2 bytes, capacity: 1024 instructions
+                        COPPER_WAIT 0, 1                ; Wait for line 1,
+                        COPPER_WAIT 0, 0                ;   then line 0, ensuring at least one frame elapses.
+Copper.ShowL2:          COPPER_MOVE 105, SMC            ; Only then, enable Layer 2 to avoid flash of scrambled date.
+                        COPPER_WAITFRAMES 149           ; Wait for another 149 frames,
+Copper.NoUla:           COPPER_MOVE 104, SMC            ;   then disable ULA layer, hiding info panel.
+                        COPPER_HALT                     ; Finally, halt copper program without repeating.
+Copper.InstructionCount EQU ($-Copper.Program)/2        ; Instruction size: 2 bytes, capacity: 1024 instructions.
