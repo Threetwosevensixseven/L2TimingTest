@@ -171,6 +171,119 @@ namespace PatternGen.Classes
             return this;
         }
 
+        public Banks FillHorizontal2(int startBankA, int startBankB, byte colorA, byte colorB)
+        {
+            var patterns = Patterns.Horizontal;
+            for (int y = 0; y < 256; y++)
+            {
+                var pattern = patterns[y % patterns.Length];
+                int x = 0;
+                int count = 1;
+                while (x < 320 && count <= pattern.FirstA)
+                {
+                    int bank = startBankA + (x / 32);
+                    int addr = ((x % 32) * 256) + y;
+                    bool evenBank = x / 64 * 2 == x / 32;
+                    byte color = evenBank ? colorA : colorB;
+                    _banks[bank][addr] = color;
+                    count++;
+                    x++;
+                }
+                count = 1;
+                while (x < 320 && count <= pattern.FirstB)
+                {
+                    int bank = startBankB + (x / 32);
+                    int addr = ((x % 32) * 256) + y;
+                    bool evenBank = x / 64 * 2 == x / 32;
+                    byte color = evenBank ? colorA : colorB;
+                    _banks[bank][addr] = color;
+                    count++;
+                    x++;
+                }
+                while (x < 320)
+                {
+                    count = 1;
+                    while (x < 320 && count <= pattern.RepeatA)
+                    {
+                        int bank = startBankA + (x / 32);
+                        int addr = ((x % 32) * 256) + y;
+                        bool evenBank = x / 64 * 2 == x / 32;
+                        byte color = evenBank ? colorA : colorB;
+                        _banks[bank][addr] = color;
+                        count++;
+                        x++;
+                    }
+                    count = 1;
+                    while (x < 320 && count <= pattern.RepeatB)
+                    {
+                        int bank = startBankB + (x / 32);
+                        int addr = ((x % 32) * 256) + y;
+                        bool evenBank = x / 64 * 2 == x / 32;
+                        byte color = evenBank ? colorA : colorB;
+                        _banks[bank][addr] = color;
+                        count++;
+                        x++;
+                    }
+                }
+            }
+            return this;
+        }
+
+        public Banks FillHorizontal3(int startBankA, int startBankB, params byte[] colors)
+        {
+            var patterns = Patterns.Horizontal;
+            for (int y = 0; y < 256; y++)
+            {
+                var pattern = patterns[y % patterns.Length];
+                int x = 0;
+                int count = 1;
+                while (x < 320 && count <= pattern.FirstA)
+                {
+                    int bank = startBankA + (x / 32);
+                    int addr = ((x % 32) * 256) + y;
+                    byte color = colors[(x / 32) % colors.Length];
+                    _banks[bank][addr] = color;
+                    count++;
+                    x++;
+                }
+                count = 1;
+                while (x < 320 && count <= pattern.FirstB)
+                {
+                    int bank = startBankB + (x / 32);
+                    int addr = ((x % 32) * 256) + y;
+                    byte color = colors[(x / 32) % colors.Length];
+                    _banks[bank][addr] = color;
+                    count++;
+                    x++;
+                }
+                while (x < 320)
+                {
+                    count = 1;
+                    while (x < 320 && count <= pattern.RepeatA)
+                    {
+                        int bank = startBankA + (x / 32);
+                        int addr = ((x % 32) * 256) + y;
+                        byte color = colors[(x / 32) % colors.Length];
+                        _banks[bank][addr] = color;
+                        count++;
+                        x++;
+                    }
+                    count = 1;
+                    while (x < 320 && count <= pattern.RepeatB)
+                    {
+                        int bank = startBankB + (x / 32);
+                        int addr = ((x % 32) * 256) + y;
+                        byte color = colors[(x / 32) % colors.Length];
+                        _banks[bank][addr] = color;
+                        count++;
+                        x++;
+                    }
+                }
+            }
+            return this;
+        }
+
+
         public Banks FillVerticalPattern(int startBankA, int startBankB, byte colorA, byte colorB, byte colorC)
         {
             var patterns = Patterns.Vertical;

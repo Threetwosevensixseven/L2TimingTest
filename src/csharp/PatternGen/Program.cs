@@ -15,7 +15,9 @@ namespace PatternGen
         {
             //StripesWithRandomBW();
             //StripesWithRandomColour();
-            HorizontalDiagonalPattern();
+            //HorizontalDiagonalPattern();
+            //HorizontalDiagonalPattern2();
+            RainbowVerticalPattern();
             //HorizontalTestPattern();
 
         }
@@ -62,6 +64,42 @@ namespace PatternGen
                 .FillHorizontal(blueBank, yellowBank, Colour.Magenta, Colour.Cyan, Colour.Black)
                 .SaveAsPng24_320x256(18, Path.Combine(IMAGE_PATH, "HorizontalDiagonalPattern-A.png"))
                 .SaveAsPng24_320x256(28, Path.Combine(IMAGE_PATH, "HorizontalDiagonalPattern-B.png"))
+                .SaveAs8KbBanks(Path.Combine(DATA_PATH, "pattern_{bankNo}.bin"))
+                .StartHorizontalPatternTest("hpattern.asm")
+                .AddHorizontalPatternAltTest(yellowBank, blueBank, 11676)
+                .EndHorizontalPatternTest(blueBank)
+                .SaveAsHorizonalPattern(Path.Combine(CODE_PATH));
+        }
+
+        static void HorizontalDiagonalPattern2()
+        {
+            int blueBank = 18;
+            int yellowBank = 28;
+            new Banks()
+                .Create(blueBank, 20)
+                .FillSolid(blueBank, 10, Colour.Black)
+                .FillSolid(yellowBank, 10, Colour.Black)
+                .FillHorizontal2(blueBank, yellowBank, Colour.Blue, Colour.Yellow)
+                .SaveAsPng24_320x256(18, Path.Combine(IMAGE_PATH, "HorizontalDiagonalPattern2-A.png"))
+                .SaveAsPng24_320x256(28, Path.Combine(IMAGE_PATH, "HorizontalDiagonalPattern2-B.png"))
+                .SaveAs8KbBanks(Path.Combine(DATA_PATH, "pattern_{bankNo}.bin"))
+                .StartHorizontalPatternTest("hpattern.asm")
+                .AddHorizontalPatternAltTest(yellowBank, blueBank, 11676)
+                .EndHorizontalPatternTest(blueBank)
+                .SaveAsHorizonalPattern(Path.Combine(CODE_PATH));
+        }
+
+        static void RainbowVerticalPattern()
+        {
+            int blueBank = 18;
+            int yellowBank = 28;
+            new Banks()
+                .Create(blueBank, 20)
+                .FillSolid(blueBank, 10, Colour.Black)
+                .FillSolid(yellowBank, 10, Colour.Black)
+                .FillHorizontal3(blueBank, yellowBank, Colour.Blue, Colour.Red, Colour.Yellow, Colour.Magenta, Colour.White, Colour.Green, Colour.Cyan, Colour.Blue, Colour.Red, Colour.Yellow)
+                .SaveAsPng24_320x256(18, Path.Combine(IMAGE_PATH, "RainbowVerticalPattern-A.png"))
+                .SaveAsPng24_320x256(28, Path.Combine(IMAGE_PATH, "RainbowVerticalPattern-B.png"))
                 .SaveAs8KbBanks(Path.Combine(DATA_PATH, "pattern_{bankNo}.bin"))
                 .StartHorizontalPatternTest("hpattern.asm")
                 .AddHorizontalPatternAltTest(yellowBank, blueBank, 11676)
